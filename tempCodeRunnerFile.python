@@ -1,0 +1,28 @@
+def key_gen_func(i: int) -> int:
+    # Fibonacci-based keygen function
+    a, b = 0, 1
+    for _ in range(i):
+        a, b = b, a + b
+    return a
+
+def decrypt(cipher_hex: str, offset: int) -> bytes:
+    encrypted = bytes.fromhex(cipher_hex)
+    decrypted = bytearray()
+    for i, byte in enumerate(encrypted):
+        key = key_gen_func(i + offset) & 0xFF
+        decrypted.append(byte ^ key)
+    return decrypted
+
+cipher_hex = "60797d6e6c455d490d41774a1b4e1d705e1c155314557d415452075211573957033b0459015e5b16"
+
+# Brute-force all even offsets (0-254) since LSB of offset = 0
+for offset in range(0, 256, 2):
+    plaintext = decrypt(cipher_hex, offset)
+    try:
+        decoded = plaintext.decode()
+        if decoded.startswith("MASS{"):
+            print(f"[+] Offset: {offset}")
+            print(f"[+] Flag: {decoded}")
+            break
+    except UnicodeDecodeError:
+        continue
